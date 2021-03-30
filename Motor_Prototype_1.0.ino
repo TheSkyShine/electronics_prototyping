@@ -2,92 +2,27 @@
 // Include Libraries
 #include "Arduino.h"
 #include "Servo.h"
-#include "SparkFun_VCNL4040_Arduino_Library.h"
 
 
 // Pin Definitions
-#define SERVO9G_PIN_SIG  2
-
-/////////////////////////////////////////////////////////////////
-// Sensor Initialization and Boolean Testing ////////////////////
-/////////////////////////////////////////////////////////////////
-
-#include "SparkFun_VCNL4040_Arduino_Library.h"
-VCNL4040 proximitySensor;
-
-long startingProxValue = 0;
-long deltaNeeded = 0;
-boolean nothingThere = false;
-
-void setup()
-{
-  Serial.begin(9600);
-  Serial.println("SparkFun VCNL4040 Example");
-
-  Wire.begin(); //Join i2c bus
-
-  if (proximitySensor.begin() == false)
-  {
-    Serial.println("Device not found. Please check wiring.");
-    while (1); //Freeze!
-  }
-
-  //Set the current used to drive the IR LED - 50mA to 200mA is allowed.
-  proximitySensor.setLEDCurrent(200); //For this example, let's do max.
-
-  //The sensor will average readings together by default 8 times.
-  //Reduce this to one so we can take readings as fast as possible
-  proximitySensor.setProxIntegrationTime(8); //1 to 8 is valid
-
-  //Take 8 readings and average them
-  for(byte x = 0 ; x < 8 ; x++)
-  {
-    startingProxValue += proximitySensor.getProximity();
-  }
-  startingProxValue /= 8;
-
-  deltaNeeded = (float)startingProxValue * 0.05; //Look for 5% change
-  if(deltaNeeded < 5) deltaNeeded = 5; //Set a minimum
-}
-
-void loop()
-{
-  unsigned int proxValue = proximitySensor.getProximity(); 
-
-  Serial.print("Prox: ");
-  Serial.print(proxValue);
-  Serial.print(" ");
-
-  //Let's only trigger if we detect a 5% change from the starting value
-  //Otherwise, values at the edge of the read range can cause false triggers
-  if(proxValue > (startingProxValue + deltaNeeded))
-  {
-    Serial.print("Something is there!");
-    nothingThere = false;
-  }
-  else
-  {
-    if(nothingThere == false) Serial.print("I don't see anything");
-    nothingThere = true;
-  }
-
-  Serial.println();
-  delay(10);
-}
+#define SERVO360MICRO1_1_PIN_SIG  2
+#define SERVO360MICRO2_2_PIN_SIG  3
 
 
 
 // Global variables and defines
-const int servo9gRestPosition   = 0;  //Starting position
-const int servo9gTargetPosition = 150; //Position when event is detected
+
 // object initialization
-Servo servo9g;
+Servo servo360Micro1_1;
+Servo servo360Micro2_2;
 
 
 // define vars for testing menu
-// const int timeout = 10000;       //define timeout of 10 sec
+const int timeout = 10000;       //define timeout of 10 sec
 char menuOption = 0;
 long time0;
+boolean cat = false;
+int motor2_counter = 0;
 
 // Setup the essentials for your circuit to work. It runs first every time your circuit is powered with electricity.
 void setup() 
@@ -98,10 +33,7 @@ void setup()
     while (!Serial) ; // wait for serial port to connect. Needed for native USB
     Serial.println("start");
     
-    servo9g.attach(SERVO9G_PIN_SIG);
-    servo9g.write(servo9gRestPosition);
-    delay(100);
-    servo9g.detach();
+    
     menuOption = menu();
     
 }
@@ -112,25 +44,37 @@ void loop()
     
     
     if(menuOption == '1') {
-    // 9G Micro Servo - Test Code
-    // The servo will rotate to target position and back to resting position with an interval of 500 milliseconds (0.5 seconds) 
-    servo9g.attach(SERVO9G_PIN_SIG);         // 1. attach the servo to correct pin to control it.
-    servo9g.write(servo9gTargetPosition);  // 2. turns servo to target position. Modify target position by modifying the 'ServoTargetPosition' definition above.
-    delay(500);                              // 3. waits 500 milliseconds (0.5 sec). change the value in the brackets (500) for a longer or shorter delay in milliseconds.
-    servo9g.write(servo9gRestPosition);    // 4. turns servo back to rest position. Modify initial position by modifying the 'ServoRestPosition' definition above.
-    delay(500);                              // 5. waits 500 milliseconds (0.5 sec). change the value in the brackets (500) for a longer or shorter delay in milliseconds.
-    servo9g.detach();                    // 6. release the servo to conserve power. When detached the servo will NOT hold it's position under stress.
+    // Continuous Rotation Micro Servo - FS90R #1 - Test Code
+    // The servo will rotate CW in full speed, CCW in full speed, and will stop  with an interval of 2000 milliseconds (2 seconds) 
+    servo360Micro1_1.attach(SERVO360MICRO1_1_PIN_SIG);         // 1. attach the servo to correct pin to control it.
+    servo360Micro1_1.write(180);  // 2. turns servo CW in full speed. change the value in the brackets (180) to change the speed. As these numbers move closer to 90, the servo will move slower in that direction.
+    delay(2000);                              // 3. waits 2000 milliseconds (2 sec). change the value in the brackets (2000) for a longer or shorter delay in milliseconds.
+    servo360Micro1_1.write(0);    // 4. turns servo CCW in full speed. change the value in the brackets (0) to change the speed. As these numbers move closer to 90, the servo will move slower in that direction.
+    delay(2000);                              // 5. waits 2000 milliseconds (2 sec). change the value in the brackets (2000) for a longer or shorter delay in milliseconds.
+    servo360Micro1_1.write(90);    // 6. sending 90 stops the servo 
+    delay(2000);                              // 7. waits 2000 milliseconds (2 sec). change the value in the brackets (2000) for a longer or shorter delay in milliseconds.
+    servo360Micro1_1.detach();                    // 8. release the servo to conserve power. When detached the servo will NOT hold it's position under stress.
+    
+    motor2_counter++;
     }
-
-    if(menuOption == '2') 
-    {
-      menuOption = menu();
-      servo9g.detach();
+    
+    if(motor2_counter % 2 == 0) {  // turns treat motor every time the first motor is rotated X amount
+    // if (millis() > 60000)  // if we'd rather use time as a basis for the treat dispenser instead of number of interactions
+    // Continuous Rotation Micro Servo - FS90R #2 - Test Code
+    // The servo will rotate CW in full speed, CCW in full speed, and will stop  with an interval of 2000 milliseconds (2 seconds) 
+    servo360Micro2_2.attach(SERVO360MICRO2_2_PIN_SIG);         // 1. attach the servo to correct pin to control it.
+    servo360Micro2_2.write(100);  // 2. turns servo CW in full speed. change the value in the brackets (180) to change the speed. As these numbers move closer to 90, the servo will move slower in that direction.
+    delay(2000);                              // 3. waits 2000 milliseconds (2 sec). change the value in the brackets (2000) for a longer or shorter delay in milliseconds.
+    servo360Micro2_2.write(90);    // 4. turns servo CCW in full speed. change the value in the brackets (0) to change the speed. As these numbers move closer to 90, the servo will move slower in that direction.
+    delay(1000);                              // 5. waits 2000 milliseconds (2 sec). change the value in the brackets (2000) for a longer or shorter delay in milliseconds.
+    servo360Micro2_2.write(80);    // 6. sending 90 stops the servo 
+    delay(2000);                              // 7. waits 2000 milliseconds (2 sec). change the value in the brackets (2000) for a longer or shorter delay in milliseconds.
+    servo360Micro2_2.detach();                    // 8. release the servo to conserve power. When detached the servo will NOT hold it's position under stress.
     }
     
 //    if (millis() - time0 > timeout)
 //    {
-//       menuOption = menu();
+//        menuOption = menu();
 //    }
     
 }
@@ -142,9 +86,10 @@ void loop()
 char menu()
 {
 
-//    Serial.println(F("\nWhich component would you like to test?"));
-    Serial.println(F("Press 1 to activate 9G Micro Servo"));
-    Serial.println(F("Press 2 to stop \n"));
+    Serial.println(F("\nWhich component would you like to test?"));
+    Serial.println(F("(1) Continuous Rotation Micro Servo - FS90R #1"));
+    Serial.println(F("(2) Continuous Rotation Micro Servo - FS90R #2"));
+    Serial.println(F("(menu) send anything else or press on board reset button\n"));
     while (!Serial.available());
 
     // Read data from serial monitor if received
@@ -155,7 +100,9 @@ char menu()
         {   
             
             if(c == '1') 
-          Serial.println(F("Now Testing 9G Micro Servo"));
+          Serial.println(F("Now Testing Continuous Rotation Micro Servo - FS90R #1"));
+        else if(c == '2') 
+          Serial.println(F("Now Testing Continuous Rotation Micro Servo - FS90R #2"));
             else
             {
                 Serial.println(F("illegal input!"));
