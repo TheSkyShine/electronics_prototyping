@@ -1,5 +1,5 @@
+// Libraries to be included so components can work
 #include <Wire.h>
-
 #include "SparkFun_VCNL4040_Arduino_Library.h"
 #include "Arduino.h"
 #include "Servo.h"
@@ -39,7 +39,7 @@ void loop() {
 
   Serial.print("I don't see anything");
 
-  if(proxValue > 1)
+  if(proxValue > 1)                                      // If sensors seem too sensitive, increase beyond 1 but not above 3
   {
     Serial.print("\nSomething is there");
     somethingthere = true;
@@ -52,7 +52,11 @@ void loop() {
   Serial.println();
   delay(10);
 
-  if(somethingthere == true){
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Code for first motor
+
+  if(somethingthere == true){                               // If any sensor senses anything, it activates this code and turns on the motor
     servo360Micro1_1.attach(SERVO360MICRO1_1_PIN_SIG);
     servo360Micro1_1.write(180);
     delay(2000);
@@ -62,20 +66,24 @@ void loop() {
     delay(2000);
     servo360Micro1_1.detach();
 
-    motor2_counter++;
+    motor2_counter++;                                        // Itercounter +1 for first motor (counts how many times the first motor has been turned on)
   }
 
-  //if(millis() > 60000 && millis() < 61000) {
-  if(motor2_counter % 20 == 0) {
-    servo360Micro2_2.attach(SERVO360MICRO2_2_PIN_SIG);
-    servo360Micro2_2.write(110);
-    delay(1000);
-    servo360Micro2_2.write(90);
-    delay(10);
-    servo360Micro2_2.write(70);
-    delay(1000);
-    servo360Micro2_2.detach(); 
-  }
+// Code for second motor
 
+  if(motor2_counter % 20 == 0) {                             // Every 20 turns the first motor does, second motor turns
+    servo360Micro2_2.attach(SERVO360MICRO2_2_PIN_SIG);       // Attaches into motor 2
+    servo360Micro2_2.write(110);                             // Gives value of 110 PWM to sevo motor (will turn clockwise)
+    delay(1000);                                             // The 110 PWM value will stay on the motor for 1000 ms (1 second)
+    servo360Micro2_2.write(90);                              // Attaches value of 90 PWM to servo motor (90 PWM tells the servo to not move)
+    delay(10);                                               // Servo does not move for 10 ms
+    servo360Micro2_2.write(70);                              // Gives value of 70 PWM to servo motor (will turn counter-clockwise)
+    delay(1000);                                             // Servo goes at 70 PWM for 100 ms (1 second)
+    servo360Micro2_2.detach();                               // Detaches motor (end of instruction)
+  }
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
 }
+
+// Servo motors work between 0 and 180 PWM, where the PWM indicates the speed of the motor. 0 is max speed counter clockwise, 180 is max speed clockwise and 90 is no speed.
+// Note this relationship is not linear, which is what gave me trouble. But you should be able to figure this out since you have the physical toy.
