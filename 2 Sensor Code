@@ -16,6 +16,7 @@ VCNL4040 proximitySensor;
 VCNL4040 proximitySensor2;
 
 boolean somethingthere = false;
+boolean gate = open;
 int motor2_counter = 0;
 
 
@@ -51,7 +52,7 @@ void loop() {
   }
 
   Serial.println();
-  delay(10);
+  delay(100);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -72,7 +73,9 @@ void loop() {
 
 // Code for second motor
 
-  if(motor2_counter % 20 == 0) {                             // Every 20 turns the first motor does, second motor turns
+  if(somethingthere == true && gate == open) {                             // Every 20 turns the first motor does, second motor turns
+  
+    delay(60000);
     servo360Micro2_2.attach(SERVO360MICRO2_2_PIN_SIG);       // Attaches into motor 2
     servo360Micro2_2.write(110);                             // Gives value of 110 PWM to sevo motor (will turn clockwise)
     delay(1000);                                             // The 110 PWM value will stay on the motor for 1000 ms (1 second)
@@ -81,6 +84,8 @@ void loop() {
     servo360Micro2_2.write(70);                              // Gives value of 70 PWM to servo motor (will turn counter-clockwise)
     delay(1000);                                             // Servo goes at 70 PWM for 100 ms (1 second)
     servo360Micro2_2.detach();                               // Detaches motor (end of instruction)
+    
+    gate = open
   }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
